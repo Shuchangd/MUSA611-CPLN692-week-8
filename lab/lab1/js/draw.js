@@ -213,15 +213,17 @@ map.on(L.Draw.Event.CREATED, function(e){
             $(`[data-leaflet-id=${e.target._leaflet_id}]`).css("background-color", "transparent");
         });
     })
-    $(`[data-leaflet-id=${id}]`).click(function(e) {
-         _.map(layers, function(arr){
-            if(arr.id='${id}'){
-               map.removeLayer(arr.shape);
-            }
-        })
-        $(`[data-leaflet-id=${layer['id']}]`).remove();
-      });
 
-}) 
+    _.map(layers, function(layer){
+      $(`[data-leaflet-id=${layer['id']}]`).click(function(e) {
+        console.log(e);
+        map.removeLayer(layer.shape);
+        $(`[data-leaflet-id=${layer['id']}]`).remove();
+        delete layer;
+    });
+  })
+  });
+
+
 
 
