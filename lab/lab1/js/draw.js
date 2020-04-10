@@ -5,14 +5,49 @@ Task 1: Try to draw something on the map
 
 Try to use one or two of the drawing tools. They should allow you to draw
 without needing any additional configuration. These shapes will not be added to
-the map. We'll fix that in the next task.
+the map. We'll fix that in the next task.*/
 
-Task 2: Add rectangles to map
+var polygon = turf.circle([40.000, -85.1639], 2, {steps: 10, units: 'kilometers'});
+var point = turf.point([-75.3221, 39.529]);
+// "a", "b", and "c" values represent the values of the coordinates in order.
+var triangle = turf.polygon([[
+  [-75.1221, 39.57],
+  [-75.58, 39.18],
+  [-75.97, 39.86],
+  [-75.1221, 39.57]
+]], {
+  "a": 11,
+  "b": 122,
+  "c": 44
+});
+
+// FeatureGroup is to store editable layers
+var drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+var drawControl = new L.Control.Draw({
+         edit: {
+             featureGroup: drawnItems
+         }
+     });
+map.addControl(drawControl);
+
+
+/* Task 2: Add rectangles to map
 
 Add the rectangle layers to the map when they are drawn. Hint: you can use the
-addLayer function that we have used in the past.
+addLayer function that we have used in the past. */
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+L.geoJSON(triangle,  {style: myStyle}).addTo(map);
+L.geoJSON(point,{style: myStyle}).addTo(map);
 
-Task 3: Limit to one rectangle
+//map.on(L.Draw.Event.CREATED, function(e){var layer = e.layer; map.addLayer(layer)})
+
+
+/* Task 3: Limit to one rectangle
 
 For our application, we only want one rectangle to be displayed on the map at
 any given time. When a user draws a new rectangle, the old rectangle should be
@@ -25,9 +60,17 @@ You will also need to remove the previous layer from the map.
 
 If you get the error: "Cannot read property '_leaflet_id' of undefined", it
 may be because you are trying to remove a layer that does not yet exist.
-Check to see if myRectangle is defined before trying to remove it.
+Check to see if myRectangle is defined before trying to remove it. */
 
-Task 4: Add shape to sidebar
+var layer = [0,0];
+map.on(L.Draw.Event.CREATED, function(e){
+    map.removeLayer(layer)
+    var newlayer = e.layer;
+    layer = e.layer;
+    map.addLayer(newlayer)})
+
+
+/* Task 4: Add shape to sidebar
 
 Let's add the shape we've created to the sidebar. In the HTML, there is a
 container with ID #shapes. Use jQuery's `append` or `appendTo` function
@@ -58,6 +101,8 @@ Where [the id] is replaced by the Leaflet ID of the layer.
 
 When a new layer is added, you can use jQuery's empty function to clear
 out the #shapes container before appending a new .shape.
+
+
 
 Task 5: Store multiple shapes
 
