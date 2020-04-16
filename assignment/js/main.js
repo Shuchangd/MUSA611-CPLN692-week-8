@@ -89,7 +89,6 @@ function. That being said, you are welcome to make changes if it helps.
 var resetApplication = function() {
   _.each(state.markers, function(marker) { map.removeLayer(marker) })
   map.removeLayer(state.line);
-
   state.markers = []
   state.line = undefined;
   $('#button-reset').hide();
@@ -102,11 +101,34 @@ On draw
 
 Leaflet Draw runs every time a marker is added to the map. When this happens
 ---------------- */
+var coords;
+var accessToken = 'pk.eyJ1IjoiY3N0YyIsImEiOiJjaXdpdG50bzUwMDAxMm9vMnJjOXgzZm1xIn0.PIfIWUFfEuOISs-XYR3XJw';
 
 map.on('draw:created', function (e) {
+  $('#button-reset').show();
   var type = e.layerType; // The type of shape
   var layer = e.layer; // The Leaflet layer for the shape
   var id = L.stamp(layer); // The unique Leaflet ID for the
-
-  console.log('Do something with the layer you just created:', layer, layer._latlng);
+  state.markers.push(layer);
+  map.addLayer(layer);
+  if (state.markers.length > 1) {
+    var newcoords = `${layer._latlng.lng},${layer._latlng.lat}`;
+    coords = coords + `;${newcoords}`;
+    //console.log(coords);
+    var request = $.ajax(`https://api.mapbox.com/directions/v5/mapbox/walking/${coords}.json?access_token=${accessToken}`);
+    request.done(function(response) {
+        var route = turf.lineString(polyline.decode(response.routes[0].geometry));
+        var linestring = polyline.decode(response.routes[0].geometry);
+        linestring = _.map(linestring, function(arr){ 
+                            return [arr[1], arr[0]];
+                          });
+        if(state.markers.length>2){
+          map.removeLayer(state.line);
+        }      
+        state.line = L.geoJSON(turf.lineString(linestring));
+        state.line.addTo(map);
+    });
+  } else{
+    coords = `${layer._latlng.lng},${layer._latlng.lat}`
+  }
 });

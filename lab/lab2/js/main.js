@@ -65,20 +65,24 @@ Questions you should ask yourself:
   - What are the inputs?
   - How does the output look?
   - What can I do with the output?
-  - Can I get a lat/lng from the output?
+  - Can I get a lat/lng from the output?*/
 
+var accessToken = 'pk.eyJ1IjoiY3N0YyIsImEiOiJjaXdpdG50bzUwMDAxMm9vMnJjOXgzZm1xIn0.PIfIWUFfEuOISs-XYR3XJw';
 
-Task 2: Use Mapbox's 'Navigation' API to generate a route based on your origin and destination
+//var inputs = $.ajax("https://api.mapbox.com/geocoding/v5/mapbox.places/${dest}.json?access_token=${accessToken}");
+
+//inputs.done(console.log);
+
+/*Task 2: Use Mapbox's 'Navigation' API to generate a route based on your origin and destination
 
 The docs: https://docs.mapbox.com/api/navigation/#directions
 (No example url provided, try to figure it out using the docs)
 
 Again, the task is somewhat underspecified. Let's start with the simplest routing
 option available. Once you're getting a valid (as best you can tell) response
-from the server, move to the next task.
+from the server, move to the next task. */
 
-
-Task 3: Decode your route response
+/* Task 3: Decode your route response
 
 Intrepid readers may have already discovered that route responses are NOT
 in the familiar GeoJSON format. To see what I mean, look at the `geometry` property
@@ -134,6 +138,25 @@ var goToOrigin = _.once(function(lat, lng) {
 /* Given a lat and a long, we should create a marker, store it
  *  somewhere, and add it to the map
  */
+var origin;
+var geom;
+function get_routes(){
+    var request = $.ajax( `https://api.mapbox.com/directions/v5/mapbox/walking/${origin[1]},${origin[0]};${geom[0]},${geom[1]}.json?access_token=${accessToken}`);
+    request.done(function(direct) {
+        distance = direct.routes[0].distance;
+        time = direct.routes[0].duration;
+        var route = polyline.decode(direct.routes[0].geometry);
+        $("#Distance").text(`Distance: ${distance} m`);
+        $("#Time").text(`Time: ${time} s`);
+        //console.log(route)
+        route = _.map(route, function(arr){ return [arr[1], arr[0]];});
+        var line = turf.lineString(route);
+        L.geoJSON(line).addTo(map);
+        var bounding = turf.bbox(line);
+        map.fitBounds([[bounding[1], bounding[0]],[bounding[3], bounding[2]]]);
+      });
+}
+
 var updatePosition = function(lat, lng, updated) {
   if (state.position.marker) { map.removeLayer(state.position.marker); }
   state.position.marker = L.circleMarker([lat, lng], {color: "blue"});
@@ -146,6 +169,7 @@ $(document).ready(function() {
   /* This 'if' check allows us to safely ask for the user's current position */
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(function(position) {
+      origin = [position.coords.latitude,position.coords.longitude];
       updatePosition(position.coords.latitude, position.coords.longitude, position.timestamp);
     });
   } else {
@@ -167,7 +191,12 @@ $(document).ready(function() {
   // click handler for the "calculate" button (probably you want to do something with this)
   $("#calculate").click(function(e) {
     var dest = $('#dest').val();
-    console.log(dest);
+    var geocode = $.ajax(`https://api.mapbox.com/geocoding/v5/mapbox.places/${dest}.json?access_token=${accessToken}`);
+    geocode.done(function(response){
+        geom = response.features[0].geometry.coordinates;
+        L.circleMarker([geom[1], geom[0]], {color: "rgb(22,33,44)"}).addTo(map);
+        get_routes();
+    })
   });
 
 });

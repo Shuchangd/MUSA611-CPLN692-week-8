@@ -11,4 +11,4 @@ var Stamen_TonerLite = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{
   minZoom: 0,
   maxZoom: 20,
   ext: 'png'
-}).addTo(map);
+}).addTo(map); 
